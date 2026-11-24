@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歌舞伎・隈取りパターン参照ガイド</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-950 text-stone-100 min-h-screen">
+<div class="max-w-4xl mx-auto p-4">
+  <h1 class="text-3xl font-bold text-center mb-1" style="font-family:serif;letter-spacing:0.1em;">歌舞伎 隈取り参照ガイド</h1>
+  <p class="text-center text-stone-400 mb-6 text-sm">隈取りパターン・役柄・描き方の完全リファレンス</p>
+
+  <!-- Color filter -->
+  <div class="flex gap-2 mb-5 justify-center flex-wrap">
+    <button onclick="filterColor('all')" id="filter-all" class="px-3 py-1.5 rounded-full bg-stone-700 text-white text-sm font-semibold" aria-label="全て表示">全て</button>
+    <button onclick="filterColor('red')" id="filter-red" class="px-3 py-1.5 rounded-full bg-red-900 text-red-200 text-sm" aria-label="赤隈">🔴 赤隈</button>
+    <button onclick="filterColor('blue')" id="filter-blue" class="px-3 py-1.5 rounded-full bg-blue-900 text-blue-200 text-sm" aria-label="青隈">🔵 青隈</button>
+    <button onclick="filterColor('brown')" id="filter-brown" class="px-3 py-1.5 rounded-full bg-amber-900 text-amber-200 text-sm" aria-label="茶隈">🟤 茶隈</button>
+    <button onclick="filterColor('black')" id="filter-black" class="px-3 py-1.5 rounded-full bg-gray-800 text-gray-200 text-sm" aria-label="黒隈">⚫ 黒隈</button>
+  </div>
+
+  <!-- Kumadori Grid -->
+  <div id="kumadori-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"></div>
+
+  <!-- Detail Panel -->
+  <div id="detail-panel" class="bg-stone-900 rounded-xl p-5 hidden">
+    <div class="flex items-start gap-4">
+      <canvas id="detail-canvas" width="140" height="160" class="rounded-lg flex-shrink-0"></canvas>
+      <div class="flex-1">
+        <h2 id="detail-name" class="text-xl font-bold mb-1" style="font-family:serif;"></h2>
+        <div id="detail-role" class="text-sm text-stone-400 mb-2"></div>
+        <div id="detail-color" class="text-sm mb-2"></div>
+        <div id="detail-steps" class="text-sm text-stone-300 space-y-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Info -->
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-red-900/30 rounded-xl p-4 border border-red-800">
+      <h3 class="font-bold text-red-300 mb-2">荒事（あらごと）</h3>
+      <p class="text-xs text-stone-300">超人的な力を持つ英雄・武将の役。鬼や神の力が宿る勇壮な演技スタイル。<br><br>代表隈：筋隈（赤）・一本隈</p>
+    </div>
+    <div class="bg-blue-900/30 rounded-xl p-4 border border-blue-800">
+      <h3 class="font-bold text-blue-300 mb-2">和事（わごと）</h3>
+      <p class="text-xs text-stone-300">恋愛や人情を主題とした柔らかい演技。公家・商人・町人の役柄が多い。<br><br>代表隈：なし（白塗り基本）</p>
+    </div>
+    <div class="bg-purple-900/30 rounded-xl p-4 border border-purple-800">
+      <h3 class="font-bold text-purple-300 mb-2">悪役・敵役</h3>
+      <p class="text-xs text-stone-300">悪の権化・妖怪・鬼の役。逆三角形の眉や強調された目元が特徴。<br><br>代表隈：藍隈（青）・黒隈</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const kumadori = [
+  { name: '筋隈（すじぐま）', color: 'red', role: '荒事・英雄', role_en: '勇者・武将', steps: ['白塗りベースを塗る','赤で額から目の周りに放射状の筋を描く','眉は太く力強く上向きに','目の下まで縦縞を通す'], desc: '最も代表的な隈取り。勇者・神々の使者を表す', symbol: 'lines' },
+  { name: '一本隈', color: 'red', role: '荒事・若武者', role_en: '純粋な若者の力', steps: ['白塗りベース','赤で目から放射状に1本の太い筋','シンプルで力強い表現'], desc: '1本の赤筋が特徴。若く純粋な荒事の役柄', symbol: 'single' },
+  { name: '藍隈（あいぐま）', color: 'blue', role: '悪役・妖怪', role_en: '邪悪・超自然の存在', steps: ['白塗りベース','藍色（深青）で目の周りに隈','逆三角形の目元が特徴','眉は細く鋭く下向きに'], desc: '青・藍色の隈。悪の強者・妖怪を表す', symbol: 'evil' },
+  { name: '茶隈（ちゃぐま）', color: 'brown', role: '老人・仙人', role_en: '老齢の賢者', steps: ['白塗りベース','茶色で目の周りに薄く隈','細い眉で年老いた印象を','頬のたるみを茶で強調'], desc: '茶色の隈。老人・神仙・山伏の役柄', symbol: 'old' },
+  { name: '猿隈（さるぐま）', color: 'red', role: '猿神・妖怪', role_en: '猿に変化した神や怪物', steps: ['白塗りベース','赤で目の周りを丸く囲む','鼻周りに赤を重ねて猿顔に','口元も赤で強調'], desc: '猿の顔を模した隈。変化物・動物神の役柄', symbol: 'monkey' },
+  { name: '黒隈（くろぐま）', color: 'black', role: '鬼・悪霊', role_en: '最強の悪役', steps: ['黒で顔全体に強い陰影','目元を深く黒くする','白を最小限に使う','恐怖感を最大化する表現'], desc: '黒で描く最も恐ろしい隈。強敵・鬼の役柄', symbol: 'demon' },
+  { name: '不動隈', color: 'blue', role: '不動明王', role_en: '怒りの仏様', steps: ['白塗りベース','藍で目の周りに炎状の隈','眉を極太に上向きに','口を大きく開いた形に強調'], desc: '不動明王を表す特別な隈。炎を模した形', symbol: 'fudo' },
+  { name: '三段隈', color: 'red', role: '大蛇・竜神', role_en: '蛇や竜の化身', steps: ['白塗りベース','赤で横3段の縞模様を描く','目の周りから頬まで横縞','鱗を模した表現'], desc: '横縞が特徴。蛇・竜・水神の役柄', symbol: 'stripes' },
+];
+
+let filtered = [...kumadori];
+let selectedIdx = -1;
+
+const colorMap = { red:'bg-red-900/50 border-red-700', blue:'bg-blue-900/50 border-blue-700', brown:'bg-amber-900/50 border-amber-700', black:'bg-gray-800/50 border-gray-600' };
+const colorLabel = { red:'赤隈 🔴', blue:'藍隈 🔵', brown:'茶隈 🟤', black:'黒隈 ⚫' };
+
+function drawKumadoriThumb(canvas, type, colorName) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  // Face base
+  ctx.fillStyle = '#fff8f0';
+  ctx.beginPath(); ctx.ellipse(w/2, h/2, w/2-4, h/2-4, 0, 0, 2*Math.PI); ctx.fill();
+
+  const c = colorName === 'red' ? '#c0392b' : colorName === 'blue' ? '#1a3a8f' : colorName === 'brown' ? '#8B4513' : '#111';
+
+  ctx.strokeStyle = c; ctx.lineWidth = 3; ctx.fillStyle = c;
+  if (type === 'lines' || type === 'single') {
+    // Eye lines radiating from eyes
+    const ey = h * 0.4;
+    [[w*0.3, ey], [w*0.7, ey]].forEach(([ex, ey2]) => {
+      for (let a = -60; a <= 60; a += (type==='single'?120:30)) {
+        const rad = a * Math.PI/180;
+        ctx.beginPath(); ctx.moveTo(ex, ey2);
+        ctx.lineTo(ex + Math.sin(rad)*25, ey2 - Math.cos(rad)*25); ctx.stroke();
+      }
+    });
+  } else if (type === 'evil') {
+    [[w*0.3, h*0.4], [w*0.7, h*0.4]].forEach(([ex, ey]) => {
+      ctx.beginPath(); ctx.arc(ex, ey, 14, 0, 2*Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex-10, ey-10); ctx.lineTo(ex+10, ey-10); ctx.stroke();
+    });
+  } else if (type === 'stripes') {
+    for (let i=0;i<3;i++) {
+      const y = h*0.3 + i*(h*0.15);
+      ctx.fillRect(w*0.1, y, w*0.8, 7);
+    }
+  } else if (type === 'demon') {
+    ctx.fillStyle = '#222'; ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.arc(w/2, h/2, w/2-4, 0, 2*Math.PI); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff'; ctx.font = `${w*0.5}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.fillText('👺', w/2, h*0.65);
+  } else {
+    ctx.fillRect(w*0.2, h*0.35, w*0.6, 10);
+    ctx.fillRect(w*0.2, h*0.5, w*0.6, 10);
+  }
+}
+
+function renderGrid() {
+  const grid = document.getElementById('kumadori-grid');
+  grid.innerHTML = filtered.map((k, i) => {
+    const cls = colorMap[k.color] || 'bg-stone-800 border-stone-600';
+    return `<div class="cursor-pointer ${cls} border rounded-xl p-3 hover:scale-105 transition-transform" onclick="showDetail(${kumadori.indexOf(k)})" role="button" aria-label="${k.name}を詳細表示">
+      <canvas id="thumb-${i}" width="80" height="90" class="mx-auto block mb-2 rounded"></canvas>
+      <div class="text-center font-semibold text-sm" style="font-family:serif;">${k.name}</div>
+      <div class="text-center text-xs text-stone-400">${k.role}</div>
+    </div>`;
+  }).join('');
+  filtered.forEach((k, i) => {
+    const c = document.getElementById('thumb-' + i);
+    if (c) drawKumadoriThumb(c, k.symbol, k.color);
+  });
+}
+
+function showDetail(idx) {
+  const k = kumadori[idx];
+  document.getElementById('detail-panel').classList.remove('hidden');
+  document.getElementById('detail-name').textContent = k.name;
+  document.getElementById('detail-role').textContent = `役柄: ${k.role}（${k.role_en}）`;
+  document.getElementById('detail-color').textContent = `隈の色: ${colorLabel[k.color]} — ${k.desc}`;
+  document.getElementById('detail-steps').innerHTML = '<div class="font-semibold mb-1 text-stone-200">描き方手順：</div>' + k.steps.map((s,i) => `<div>${i+1}. ${s}</div>`).join('');
+  const dc = document.getElementById('detail-canvas');
+  drawKumadoriThumb(dc, k.symbol, k.color);
+  document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function filterColor(c) {
+  ['all','red','blue','brown','black'].forEach(id => {
+    const btn = document.getElementById('filter-' + id);
+    if (btn) btn.className = btn.className.replace('ring-2 ring-white', '');
+  });
+  document.getElementById('filter-' + c).className += ' ring-2 ring-white';
+  filtered = c === 'all' ? [...kumadori] : kumadori.filter(k => k.color === c);
+  renderGrid();
+}
+
+renderGrid();
+</script>
+</body>
+</html>
